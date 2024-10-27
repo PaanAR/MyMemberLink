@@ -21,16 +21,19 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: emailController,
               decoration: InputDecoration(
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)))),
+                      borderRadius: BorderRadius.all(Radius.circular(10))),
+                  hintText: "Email"),
             ),
             SizedBox(
-              height: 20,
+              height: 10,
             ), // Add const to TextField
             TextField(
               controller: passwordController,
               decoration: InputDecoration(
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)))),
+                      borderRadius: BorderRadius.all(Radius.circular(10))),
+                  hintText: "Password"),
+              obscureText: true,
             ), // Add const to TextField
             Row(
               children: const [
