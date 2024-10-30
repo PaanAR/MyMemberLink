@@ -1,8 +1,7 @@
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'dart:convert'; // Import for JSON encoding and decoding
+import 'package:flutter/material.dart'; // Import Flutter material library for UI components
+import 'package:shared_preferences/shared_preferences.dart'; // Import for storing data locally
+import 'package:http/http.dart' as http; // Import for handling HTTP requests
 
 // Define a stateful widget for the LoginScreen
 class LoginScreen extends StatefulWidget {
@@ -26,10 +25,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
+    // Load saved preferences on widget initialization
     loadPref();
     super.initState();
   }
 
+  // Build method to construct the UI of the LoginScreen
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Center the content within the Scaffold
@@ -44,7 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
               // Text field for email input
               TextField(
                 controller: emailController, // Assign the email controller
-                keyboardType: TextInputType.emailAddress,
+                keyboardType:
+                    TextInputType.emailAddress, // Set keyboard type for email
                 decoration: const InputDecoration(
                   // Outline border with rounded corners
                   border: OutlineInputBorder(
@@ -53,10 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: "Email", // Placeholder text for email
                 ),
               ),
-              // Add vertical spacing between widgets
-              const SizedBox(
-                height: 10,
-              ), // SizedBox widget to create spacing
+              const SizedBox(height: 10), // SizedBox widget to create spacing
 
               // Text field for password input
               TextField(
@@ -85,10 +85,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         String email = emailController.text;
                         String pass = passwordController.text;
                         if (value!) {
+                          // If "Remember me" is checked
+                          // Check if email and password are provided
                           if (email.isNotEmpty && pass.isNotEmpty) {
-                            storeSharedPrefs(value, email, pass);
+                            storeSharedPrefs(
+                                value, email, pass); // Save preferences
                           } else {
-                            rememberme = false;
+                            rememberme = false; // Uncheck if fields are empty
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(
                               content: Text("Please Enter Your Credentials"),
@@ -98,12 +101,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             return;
                           }
                         } else {
+                          // If "Remember me" is unchecked
                           email = "";
                           pass = "";
-                          storeSharedPrefs(value, email, pass);
+                          storeSharedPrefs(
+                              value, email, pass); // Clear preferences
                         }
-                        rememberme = value ?? false;
-                        setState(() {}); // Update "rememberme" state
+                        rememberme =
+                            value ?? false; // Update "rememberme" state
+                        setState(() {}); // Refresh state
                       });
                     },
                   ),
@@ -112,18 +118,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Button to trigger the login function
               MaterialButton(
-                elevation: 10,
+                elevation: 10, // Button elevation for shadow effect
                 onPressed: onLogin, // Login function called when pressed
                 minWidth: 400, // Set minimum width for button
                 height: 50, // Set height for button
                 color: Colors.blue, // Button color
                 child: const Text("Login"), // Button label text
               ),
-
-              // Add vertical spacing below the button
               const SizedBox(
-                height: 20,
-              ),
+                  height: 20), // Add vertical spacing below the button
 
               // GestureDetector to handle tap events on "Forgot Password?" text
               GestureDetector(
@@ -151,20 +154,18 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return; // Exit the function if fields are empty
     }
+    // Send HTTP POST request to login API
     http.post(Uri.parse("http://10.19.5.209/mymemberlink/api/login_user.php"),
         body: {"email": email, "password": password}).then((response) {
-      // print(response.statusCode);
-      // print(response.body);
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
+        // Check for successful response
+        var data = jsonDecode(response.body); // Parse response data
         if (data['status'] == "success") {
-          //User user = User.fromJson(data['data']);
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Success"),
             backgroundColor: Colors.green,
           ));
-          //Navigator.push(context,
-          // MaterialPageRoute(builder: (content) =>  MainPage(userdata:user)));
+          // Navigate to main page (commented out here)
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Failed"),
@@ -175,9 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  // Function to store email, password, and rememberme state in shared preferences
   Future<void> storeSharedPrefs(bool value, String email, String pass) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (value) {
+      // If "Remember me" is checked
       prefs.setString('email', email);
       prefs.setString('pass', pass);
       prefs.setBool('rememberme', value);
@@ -187,11 +190,12 @@ class _LoginScreenState extends State<LoginScreen> {
         duration: Duration(seconds: 1),
       ));
     } else {
+      // If "Remember me" is unchecked, clear stored values
       prefs.setString('email', email);
       prefs.setString('pass', pass);
       prefs.setBool('rememberme', value);
-      emailController.text = "";
-      passwordController.text = "";
+      emailController.text = ""; // Clear email input field
+      passwordController.text = ""; // Clear password input field
       setState(() {});
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -202,11 +206,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Function to load stored email, password, and rememberme state
   Future<void> loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    emailController.text = prefs.getString("email")!;
-    passwordController.text = prefs.getString("pass")!;
-    rememberme = prefs.getBool("rememberme")!;
-    setState(() {});
+    emailController.text = prefs.getString("email")!; // Load email
+    passwordController.text = prefs.getString("pass")!; // Load password
+    rememberme = prefs.getBool("rememberme")!; // Load "Remember me" state
+    setState(() {}); // Update UI with loaded values
   }
 }
