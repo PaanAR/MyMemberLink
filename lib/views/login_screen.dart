@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 // Define a stateful widget for the LoginScreen
 class LoginScreen extends StatefulWidget {
@@ -148,6 +151,28 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return; // Exit the function if fields are empty
     }
+    http.post(Uri.parse("http://10.19.5.209/mymemberlink/api/login_user.php"),
+        body: {"email": email, "password": password}).then((response) {
+      // print(response.statusCode);
+      // print(response.body);
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data['status'] == "success") {
+          //User user = User.fromJson(data['data']);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Login Success"),
+            backgroundColor: Colors.green,
+          ));
+          //Navigator.push(context,
+          // MaterialPageRoute(builder: (content) =>  MainPage(userdata:user)));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Login Failed"),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    });
   }
 
   Future<void> storeSharedPrefs(bool value, String email, String pass) async {
