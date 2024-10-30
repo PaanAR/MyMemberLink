@@ -80,14 +80,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           print("Yes");
                           if (email.isNotEmpty && pass.isNotEmpty) {
                             storeSharedPrefs(value, email, pass);
+                          } else {
+                            email = "";
+                            pass = "";
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text("Please Enter Your Credentials"),
+                              backgroundColor: Colors.red,
+                            ));
                           }
                         } else {
                           print("NAY");
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                            content: Text("Please Enter Your Credentials"),
-                            backgroundColor: Colors.green,
-                          ));
+                          storeSharedPrefs(value, email, pass);
                         }
                         rememberme =
                             value ?? false; // Update "rememberme" state
@@ -154,9 +158,13 @@ class _LoginScreenState extends State<LoginScreen> {
       prefs.setString('email', email);
       prefs.setString('pass', pass);
       prefs.setBool('rememberme', value);
+      emailController.text = "";
+      passwordController.text = "";
+      setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Preferences Stored"),
+        content: Text("Preferences Removed"),
         backgroundColor: Colors.red,
+        duration: Duration(seconds: 1),
       ));
     }
   }
