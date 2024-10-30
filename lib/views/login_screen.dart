@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Define a stateful widget for the LoginScreen
 class LoginScreen extends StatefulWidget {
@@ -73,10 +74,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     value: rememberme, // Current state of the checkbox
                     onChanged: (bool? value) {
                       setState(() {
+                        String email = emailController.text;
+                        String pass = passwordController.text;
                         if (value!) {
                           print("Yes");
+                          if (email.isNotEmpty && pass.isNotEmpty) {
+                            storeSharedPrefs(value, email, pass);
+                          }
                         } else {
                           print("NAY");
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content: Text("Please Enter Your Credentials"),
+                            backgroundColor: Colors.green,
+                          ));
                         }
                         rememberme =
                             value ?? false; // Update "rememberme" state
@@ -126,6 +137,27 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(content: Text("Please enter email and password")),
       );
       return; // Exit the function if fields are empty
+    }
+  }
+
+  Future<void> storeSharedPrefs(bool value, String email, String pass) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (value) {
+      prefs.setString('email', email);
+      prefs.setString('pass', pass);
+      prefs.setBool('rememberme', value);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Preferences Stored"),
+        backgroundColor: Colors.green,
+      ));
+    } else {
+      prefs.setString('email', email);
+      prefs.setString('pass', pass);
+      prefs.setBool('rememberme', value);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Preferences Stored"),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 }
