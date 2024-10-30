@@ -73,6 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     value: rememberme, // Current state of the checkbox
                     onChanged: (bool? value) {
                       setState(() {
+                        if (value!) {
+                          print("Yes");
+                        } else {
+                          print("NAY");
+                        }
                         rememberme =
                             value ?? false; // Update "rememberme" state
                       });
