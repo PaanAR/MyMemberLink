@@ -81,20 +81,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (email.isNotEmpty && pass.isNotEmpty) {
                             storeSharedPrefs(value, email, pass);
                           } else {
-                            email = "";
-                            pass = "";
+                            rememberme = false;
+                            setState(() {}); // Update "rememberme" state
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(
                               content: Text("Please Enter Your Credentials"),
                               backgroundColor: Colors.red,
                             ));
+                            return;
                           }
                         } else {
                           print("NAY");
+                          email = "";
+                          pass = "";
                           storeSharedPrefs(value, email, pass);
                         }
-                        rememberme =
-                            value ?? false; // Update "rememberme" state
+                        rememberme = value ?? false;
+                        setState(() {}); // Update "rememberme" state
                       });
                     },
                   ),
@@ -152,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
       prefs.setBool('rememberme', value);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Preferences Stored"),
-        backgroundColor: Colors.green,
+        duration: Duration(seconds: 1),
       ));
     } else {
       prefs.setString('email', email);
