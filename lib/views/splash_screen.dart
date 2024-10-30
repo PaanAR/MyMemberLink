@@ -11,7 +11,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.push(context,
@@ -31,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            CircularProgressIndicator()
+            const CircularProgressIndicator()
           ],
         ),
       ),

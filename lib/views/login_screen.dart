@@ -22,6 +22,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool rememberme = false;
 
   @override
+  void initState() {
+    loadPref();
+    super.initState();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       // Center the content within the Scaffold
@@ -77,21 +82,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         String email = emailController.text;
                         String pass = passwordController.text;
                         if (value!) {
-                          print("Yes");
                           if (email.isNotEmpty && pass.isNotEmpty) {
                             storeSharedPrefs(value, email, pass);
                           } else {
                             rememberme = false;
-                            setState(() {}); // Update "rememberme" state
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(
                               content: Text("Please Enter Your Credentials"),
                               backgroundColor: Colors.red,
+                              duration: Duration(seconds: 1),
                             ));
                             return;
                           }
                         } else {
-                          print("NAY");
                           email = "";
                           pass = "";
                           storeSharedPrefs(value, email, pass);
@@ -153,6 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
       prefs.setString('email', email);
       prefs.setString('pass', pass);
       prefs.setBool('rememberme', value);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Preferences Stored"),
         duration: Duration(seconds: 1),
@@ -164,11 +168,20 @@ class _LoginScreenState extends State<LoginScreen> {
       emailController.text = "";
       passwordController.text = "";
       setState(() {});
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Preferences Removed"),
         backgroundColor: Colors.red,
         duration: Duration(seconds: 1),
       ));
     }
+  }
+
+  Future<void> loadPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    emailController.text = prefs.getString("email")!;
+    passwordController.text = prefs.getString("pass")!;
+    rememberme = prefs.getBool("rememberme")!;
+    setState(() {});
   }
 }
