@@ -18,7 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController phoneNumController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController password2Controller = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Global key to validate the form
 
   bool _isPasswordVisible = false; // Visibility state for password 1
   bool _isPassword2Visible = false; // Visibility state for password 2
@@ -31,11 +31,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Form(
-            key: _formKey,
+            key: _formKey, // Assign the form key to enable validation
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextField(
+                // Name input field
+                TextFormField(
                   controller: nameController,
                   keyboardType: TextInputType.text,
                   decoration: const InputDecoration(
@@ -44,9 +45,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     hintText: "Name",
                   ),
+                  // Validates that name is at least 3 characters long
+                  validator: (val) => val!.isEmpty || val.length < 3
+                      ? "Name must be longer than 3 characters"
+                      : null,
                 ),
                 const SizedBox(height: 10),
-                TextField(
+
+                // Email input field
+                TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
@@ -55,9 +62,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     hintText: "Email",
                   ),
+                  // Basic email validation
+                  validator: (val) =>
+                      val!.isEmpty || !val.contains('@') || !val.contains('.')
+                          ? "Enter a valid email"
+                          : null,
                 ),
                 const SizedBox(height: 10),
-                TextField(
+
+                // Phone number input field
+                TextFormField(
                   controller: phoneNumController,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
@@ -69,14 +83,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Password field with eye icon toggle
-                TextField(
+                // Password input field with visibility toggle
+                TextFormField(
                   controller: passwordController,
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
                     hintText: "Password",
+                    // Eye icon to toggle password visibility
                     suffixIcon: GestureDetector(
                       onTap: () {
                         setState(() {
@@ -90,19 +105,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-                  obscureText: !_isPasswordVisible,
+                  obscureText:
+                      !_isPasswordVisible, // Controls password visibility
+                  validator: (val) =>
+                      validatePassword(val ?? ''), // Password validation
                 ),
-
                 const SizedBox(height: 10),
 
-                // Confirm Password field with eye icon toggle
-                TextField(
+                // Confirm password input field with visibility toggle
+                TextFormField(
                   controller: password2Controller,
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
                     hintText: "Re-enter Password",
+                    // Eye icon to toggle confirm password visibility
                     suffixIcon: GestureDetector(
                       onTap: () {
                         setState(() {
@@ -116,11 +134,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-                  obscureText: !_isPassword2Visible,
+                  obscureText:
+                      !_isPassword2Visible, // Controls password visibility
+                  validator: (val) =>
+                      validatePassword(val ?? ''), // Password validation
                 ),
 
                 const SizedBox(height: 20),
 
+                // Register button that triggers registration dialog
                 MaterialButton(
                   elevation: 10,
                   onPressed: _registerUserDialog,
@@ -131,6 +153,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 20),
+
+                // Link to navigate to the login screen
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -148,18 +172,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // Function to validate password strength
   String? validatePassword(String value) {
     String pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{6,}$';
     RegExp regex = RegExp(pattern);
     if (value.isEmpty) {
       return 'Please enter password';
     } else if (!regex.hasMatch(value)) {
-      return 'Enter valid password';
+      return 'Password must be at least 6 characters and include an uppercase letter, lowercase letter, and a number';
     } else {
       return null;
     }
   }
 
+  // Dialog to confirm registration and validate form
   void _registerUserDialog() {
     String pass1 = passwordController.text;
     String pass2 = password2Controller.text;
@@ -174,10 +200,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Validate the form inputs
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // Show confirmation dialog for registration
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -187,6 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           title: const Text("Register new account?", style: TextStyle()),
           content: const Text("Are you sure?", style: TextStyle()),
           actions: <Widget>[
+            // Button to confirm registration
             TextButton(
               child: const Text("Yes", style: TextStyle()),
               onPressed: () {
@@ -194,6 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _registerUser();
               },
             ),
+            // Button to cancel registration
             TextButton(
               child: const Text("No", style: TextStyle()),
               onPressed: () {
@@ -206,12 +236,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // Function to register user by sending data to the server
   void _registerUser() {
     String name = nameController.text;
     String email = emailController.text;
     String phoneNum = phoneNumController.text;
     String password = passwordController.text;
 
+    // HTTP POST request to register user
     http.post(
         Uri.parse("${MyConfig.servername}/mymemberlink/api/register_user.php"),
         body: {
@@ -222,6 +254,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }).then((response) {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        // Registration success
         if (data['status'] == "success") {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Registration Success"),
@@ -230,6 +263,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Navigator.push(context,
               MaterialPageRoute(builder: (content) => const LoginScreen()));
         } else {
+          // Registration failed
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Registration Failed"),
             backgroundColor: Colors.red,
