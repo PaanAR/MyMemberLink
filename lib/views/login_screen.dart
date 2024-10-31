@@ -1,5 +1,6 @@
 import 'dart:convert'; // Import for JSON encoding and decoding
 import 'package:flutter/material.dart'; // Import Flutter material library for UI components
+import 'package:mymemberlink/views/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import for storing data locally
 import 'package:http/http.dart' as http; // Import for handling HTTP requests
 
@@ -132,7 +133,20 @@ class _LoginScreenState extends State<LoginScreen> {
               GestureDetector(
                 child: const Text(
                     "Forgot Password?"), // Text to indicate forgot password option
-              )
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const RegisterScreen()));
+                },
+                child: const Text(
+                  "Create New Account?",
+                ),
+                // Text to indicate forgot password option
+              ),
             ],
           ),
         ),
@@ -157,15 +171,19 @@ class _LoginScreenState extends State<LoginScreen> {
     // Send HTTP POST request to login API
     http.post(Uri.parse("http://10.19.5.209/mymemberlink/api/login_user.php"),
         body: {"email": email, "password": password}).then((response) {
+      print("masuk");
+      print(response.statusCode);
+      print(response.body);
       if (response.statusCode == 200) {
-        // Check for successful response
-        var data = jsonDecode(response.body); // Parse response data
+        var data = jsonDecode(response.body);
         if (data['status'] == "success") {
+          // User user = User.fromJson(data['data']);
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Success"),
-            backgroundColor: Colors.green,
+            backgroundColor: Color.fromARGB(255, 12, 12, 12),
           ));
-          // Navigate to main page (commented out here)
+          //Navigator.push(context,
+          //  MaterialPageRoute(builder: (content) => const MainScreen()));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Failed"),
