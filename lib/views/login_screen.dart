@@ -1,5 +1,6 @@
 import 'dart:convert'; // Import for JSON encoding and decoding
 import 'package:flutter/material.dart'; // Import Flutter material library for UI components
+import 'package:mymemberlink/myconfig.dart';
 import 'package:mymemberlink/views/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import for storing data locally
 import 'package:http/http.dart' as http; // Import for handling HTTP requests
@@ -23,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Boolean variable to keep track of "Remember me" checkbox state
   bool rememberme = false;
-
+  bool _isPasswordVisible = false;
   @override
   void initState() {
     // Load saved preferences on widget initialization
@@ -63,14 +64,28 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller:
                     passwordController, // Assign the password controller
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   // Outline border with rounded corners
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                  hintText: "Password", // Placeholder text for password
+                  hintText: "Password",
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                    child: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                  ),
+                  // Placeholder text for password
                 ),
-                obscureText: true, // Hide text input for password
+                obscureText:
+                    !_isPasswordVisible, // Hide text input for password
               ),
 
               // Row widget to place "Remember me" text and checkbox horizontally
@@ -169,7 +184,8 @@ class _LoginScreenState extends State<LoginScreen> {
       return; // Exit the function if fields are empty
     }
     // Send HTTP POST request to login API
-    http.post(Uri.parse("http://10.19.5.209/mymemberlink/api/login_user.php"),
+    http.post(
+        Uri.parse("${MyConfig.servername}/mymemberlink/api/login_user.php"),
         body: {"email": email, "password": password}).then((response) {
       print("masuk");
       print(response.statusCode);
