@@ -1,272 +1,251 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'dart:convert'; // Import for JSON encoding and decoding
+import 'package:flutter/material.dart'; // Import Flutter material library for UI components
 import 'package:mymemberlink/myconfig.dart';
-import 'package:mymemberlink/views/main_screen.dart';
 import 'package:mymemberlink/views/register_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import for storing data locally
+import 'package:http/http.dart' as http; // Import for handling HTTP requests
 
+// Define a stateful widget for the LoginScreen
 class LoginScreen extends StatefulWidget {
+  // Constructor for the LoginScreen widget, marked as constant
   const LoginScreen({super.key});
 
+  // Create the state for the LoginScreen widget
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+// Define the state class for the LoginScreen
 class _LoginScreenState extends State<LoginScreen> {
+  // Controller for the email input field
   TextEditingController emailController = TextEditingController();
+  // Controller for the password input field
   TextEditingController passwordController = TextEditingController();
+
+  // Boolean variable to keep track of "Remember me" checkbox state
   bool rememberme = false;
   bool _isPasswordVisible = false;
-
   @override
   void initState() {
+    // Load saved preferences on widget initialization
     loadPref();
     super.initState();
   }
 
+  // Build method to construct the UI of the LoginScreen
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login',
-      theme: ThemeData(
-        textTheme: GoogleFonts.montserratTextTheme(),
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.white, // Set background to white
-      ),
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade300,
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+    return Scaffold(
+      // Center the content within the Scaffold
+      body: Center(
+        // Add padding around the content
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          // Create a column layout for the child widgets
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Text field for email input
+              TextField(
+                controller: emailController, // Assign the email controller
+                keyboardType:
+                    TextInputType.emailAddress, // Set keyboard type for email
+                decoration: const InputDecoration(
+                  // Outline border with rounded corners
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                  hintText: "Email", // Placeholder text for email
+                ),
+              ),
+              const SizedBox(height: 10), // SizedBox widget to create spacing
+
+              // Text field for password input
+              TextField(
+                controller:
+                    passwordController, // Assign the password controller
+                decoration: InputDecoration(
+                  // Outline border with rounded corners
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                  hintText: "Password",
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                    child: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                  ),
+                  // Placeholder text for password
+                ),
+                obscureText:
+                    !_isPasswordVisible, // Hide text input for password
+              ),
+
+              // Row widget to place "Remember me" text and checkbox horizontally
+              Row(
+                children: [
+                  // Label text for "Remember me" option
+                  const Text("Remember me"),
+                  // Checkbox with a change handler to update "rememberme" state
+                  Checkbox(
+                    value: rememberme, // Current state of the checkbox
+                    onChanged: (bool? value) {
+                      setState(() {
+                        String email = emailController.text;
+                        String pass = passwordController.text;
+                        if (value!) {
+                          // If "Remember me" is checked
+                          // Check if email and password are provided
+                          if (email.isNotEmpty && pass.isNotEmpty) {
+                            storeSharedPrefs(
+                                value, email, pass); // Save preferences
+                          } else {
+                            rememberme = false; // Uncheck if fields are empty
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text("Please Enter Your Credentials"),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 1),
+                            ));
+                            return;
+                          }
+                        } else {
+                          // If "Remember me" is unchecked
+                          email = "";
+                          pass = "";
+                          storeSharedPrefs(
+                              value, email, pass); // Clear preferences
+                        }
+                        rememberme =
+                            value ?? false; // Update "rememberme" state
+                        setState(() {}); // Refresh state
+                      });
+                    },
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    _buildTextField(
-                      emailController,
-                      'Email',
-                      Icons.email_outlined,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildTextField(
-                      passwordController,
-                      'Password',
-                      Icons.lock_outline,
-                      isPassword: true,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildRememberMe(),
-                    const SizedBox(height: 40),
-                    _buildLoginButton(),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      child: const Text(
-                        "Forgot Password?",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Create New Account?",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ],
-                ),
+
+              // Button to trigger the login function
+              MaterialButton(
+                elevation: 10, // Button elevation for shadow effect
+                onPressed: onLogin, // Login function called when pressed
+                minWidth: 400, // Set minimum width for button
+                height: 50, // Set height for button
+                color: Colors.blue, // Button color
+                child: const Text("Login"), // Button label text
               ),
-            ),
+              const SizedBox(
+                  height: 20), // Add vertical spacing below the button
+
+              // GestureDetector to handle tap events on "Forgot Password?" text
+              GestureDetector(
+                child: const Text(
+                    "Forgot Password?"), // Text to indicate forgot password option
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const RegisterScreen()));
+                },
+                child: const Text(
+                  "Create New Account?",
+                ),
+                // Text to indicate forgot password option
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(
-      TextEditingController controller, String label, IconData icon,
-      {bool isPassword = false}) {
-    return TextField(
-      controller: controller,
-      obscureText: isPassword ? !_isPasswordVisible : false,
-      style: const TextStyle(color: Colors.black87),
-      keyboardType:
-          isPassword ? TextInputType.text : TextInputType.emailAddress,
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.grey.shade600),
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey),
-        filled: true,
-        fillColor: Colors.grey.shade200,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.black87, width: 2),
-        ),
-        suffixIcon: isPassword
-            ? GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
-                child: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey.shade600,
-                ),
-              )
-            : null,
-      ),
-    );
-  }
-
-  Widget _buildRememberMe() {
-    return Row(
-      children: [
-        const Text("Remember me", style: TextStyle(color: Colors.grey)),
-        Checkbox(
-          value: rememberme,
-          onChanged: (bool? value) {
-            setState(() {
-              rememberme = value ?? false;
-              if (rememberme &&
-                  emailController.text.isNotEmpty &&
-                  passwordController.text.isNotEmpty) {
-                storeSharedPrefs(
-                    rememberme, emailController.text, passwordController.text);
-              } else {
-                storeSharedPrefs(false, "", "");
-              }
-            });
-          },
-          activeColor: Colors.grey.shade700,
-          checkColor: Colors.white,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return ElevatedButton(
-      onPressed: onLogin,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.grey.shade300,
-        padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        elevation: 8,
-        shadowColor: Colors.grey.shade400,
-      ),
-      child: const Text(
-        'Login',
-        style: TextStyle(fontSize: 18, color: Colors.black87),
-      ),
-    );
-  }
-
+  // Function to handle login action
   void onLogin() {
+    // Retrieve the text from email and password controllers
     String email = emailController.text;
     String password = passwordController.text;
+
+    // Check if either email or password is empty
     if (email.isEmpty || password.isEmpty) {
+      // Show a SnackBar message if email or password is missing
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter email and password")),
       );
-      return;
+      return; // Exit the function if fields are empty
     }
-
+    // Send HTTP POST request to login API
     http.post(
-      Uri.parse("${MyConfig.servername}/mymemberlink/api/login_user.php"),
-      body: {"email": email, "password": password},
-    ).then((response) {
-      try {
+        Uri.parse("${MyConfig.servername}/mymemberlink/api/login_user.php"),
+        body: {"email": email, "password": password}).then((response) {
+      print("masuk");
+      print(response.statusCode);
+      print(response.body);
+      if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         if (data['status'] == "success") {
+          // User user = User.fromJson(data['data']);
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Success"),
-            backgroundColor: Colors.black87,
+            backgroundColor: Color.fromARGB(255, 12, 12, 12),
           ));
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const mainScreen()));
+          //Navigator.push(context,
+          //  MaterialPageRoute(builder: (content) => const MainScreen()));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Failed"),
             backgroundColor: Colors.red,
           ));
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Unexpected response format"),
-          backgroundColor: Colors.red,
-        ));
       }
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Network error. Please try again later."),
-        backgroundColor: Colors.red,
-      ));
     });
   }
 
+  // Function to store email, password, and rememberme state in shared preferences
   Future<void> storeSharedPrefs(bool value, String email, String pass) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (value) {
+      // If "Remember me" is checked
       prefs.setString('email', email);
       prefs.setString('pass', pass);
       prefs.setBool('rememberme', value);
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Preferences Stored"),
+        duration: Duration(seconds: 1),
+      ));
     } else {
-      prefs.remove('email');
-      prefs.remove('pass');
+      // If "Remember me" is unchecked, clear stored values
+      prefs.setString('email', email);
+      prefs.setString('pass', pass);
       prefs.setBool('rememberme', value);
-      emailController.text = "";
-      passwordController.text = "";
+      emailController.text = ""; // Clear email input field
+      passwordController.text = ""; // Clear password input field
+      setState(() {});
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Preferences Removed"),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 1),
+      ));
     }
-    setState(() {});
   }
 
+  // Function to load stored email, password, and rememberme state
   Future<void> loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    emailController.text = prefs.getString("email") ?? "";
-    passwordController.text = prefs.getString("pass") ?? "";
-    rememberme = prefs.getBool("rememberme") ?? false;
-    setState(() {});
+    emailController.text = prefs.getString("email")!; // Load email
+    passwordController.text = prefs.getString("pass")!; // Load password
+    rememberme = prefs.getBool("rememberme")!; // Load "Remember me" state
+    setState(() {}); // Update UI with loaded values
   }
 }

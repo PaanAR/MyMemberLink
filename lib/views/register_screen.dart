@@ -26,81 +26,135 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Register"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
-      ),
+      appBar: AppBar(title: const Text("Register")),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(32.0),
           child: Form(
             key: _formKey, // Assign the form key to enable validation
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildTextField(
+                // Name input field
+                TextFormField(
                   controller: nameController,
-                  hintText: "Name",
+                  keyboardType: TextInputType.text,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    hintText: "Name",
+                  ),
+                  // Validates that name is at least 3 characters long
                   validator: (val) => val!.isEmpty || val.length < 3
                       ? "Name must be longer than 3 characters"
                       : null,
                 ),
                 const SizedBox(height: 10),
-                _buildTextField(
+
+                // Email input field
+                TextFormField(
                   controller: emailController,
-                  hintText: "Email",
                   keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    hintText: "Email",
+                  ),
+                  // Basic email validation
                   validator: (val) =>
                       val!.isEmpty || !val.contains('@') || !val.contains('.')
                           ? "Enter a valid email"
                           : null,
                 ),
                 const SizedBox(height: 10),
-                _buildTextField(
+
+                // Phone number input field
+                TextFormField(
                   controller: phoneNumController,
-                  hintText: "Phone Number",
                   keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    hintText: "Phone Number",
+                  ),
                 ),
                 const SizedBox(height: 10),
-                _buildPasswordField(
+
+                // Password input field with visibility toggle
+                TextFormField(
                   controller: passwordController,
-                  hintText: "Password",
-                  isPasswordVisible: _isPasswordVisible,
-                  onToggleVisibility: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    hintText: "Password",
+                    // Eye icon to toggle password visibility
+                    suffixIcon: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      child: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                  ),
+                  obscureText:
+                      !_isPasswordVisible, // Controls password visibility
+                  validator: (val) =>
+                      validatePassword(val ?? ''), // Password validation
                 ),
                 const SizedBox(height: 10),
-                _buildPasswordField(
+
+                // Confirm password input field with visibility toggle
+                TextFormField(
                   controller: password2Controller,
-                  hintText: "Re-enter Password",
-                  isPasswordVisible: _isPassword2Visible,
-                  onToggleVisibility: () {
-                    setState(() {
-                      _isPassword2Visible = !_isPassword2Visible;
-                    });
-                  },
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    hintText: "Re-enter Password",
+                    // Eye icon to toggle confirm password visibility
+                    suffixIcon: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isPassword2Visible = !_isPassword2Visible;
+                        });
+                      },
+                      child: Icon(
+                        _isPassword2Visible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                  ),
+                  obscureText:
+                      !_isPassword2Visible, // Controls password visibility
+                  validator: (val) =>
+                      validatePassword(val ?? ''), // Password validation
                 ),
+
                 const SizedBox(height: 20),
+
+                // Register button that triggers registration dialog
                 MaterialButton(
-                  elevation: 8,
+                  elevation: 10,
                   onPressed: _registerUserDialog,
-                  minWidth: double.infinity,
+                  minWidth: 400,
                   height: 50,
-                  color: Colors.grey.shade300,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const Text(
-                    "Register",
-                    style: TextStyle(color: Colors.black87, fontSize: 18),
-                  ),
+                  color: Colors.blue,
+                  child: const Text("Register"),
                 ),
+
                 const SizedBox(height: 20),
+
+                // Link to navigate to the login screen
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -108,10 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         MaterialPageRoute(
                             builder: (context) => const LoginScreen()));
                   },
-                  child: const Text(
-                    "Already Registered? Login",
-                    style: TextStyle(color: Colors.grey),
-                  ),
+                  child: const Text("Already Register?"),
                 ),
               ],
             ),
@@ -121,74 +172,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade200,
-        hintText: hintText,
-        hintStyle: TextStyle(color: Colors.grey.shade600),
-      ),
-      validator: validator,
-    );
-  }
-
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required String hintText,
-    required bool isPasswordVisible,
-    required VoidCallback onToggleVisibility,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: !isPasswordVisible,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade200,
-        hintText: hintText,
-        hintStyle: TextStyle(color: Colors.grey.shade600),
-        suffixIcon: GestureDetector(
-          onTap: onToggleVisibility,
-          child: Icon(
-            isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ),
-      validator: validatePassword,
-    );
-  }
-
-  String? validatePassword(String? value) {
+  // Function to validate password strength
+  String? validatePassword(String value) {
     String pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{6,}$';
     RegExp regex = RegExp(pattern);
-    if (value == null || value.isEmpty) {
+    if (value.isEmpty) {
       return 'Please enter password';
     } else if (!regex.hasMatch(value)) {
-      return 'Password must be at least 6 characters, include uppercase, lowercase, and a number';
+      return 'Password must be at least 6 characters and include an uppercase letter, lowercase letter, and a number';
+    } else {
+      return null;
     }
-    return null;
   }
 
+  // Dialog to confirm registration and validate form
   void _registerUserDialog() {
     String pass1 = passwordController.text;
     String pass2 = password2Controller.text;
 
+    // Check if passwords match
     if (pass1 != pass2) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Passwords do not match!"),
@@ -198,28 +200,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Validate the form inputs
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // Show confirmation dialog for registration
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("Register new account?"),
-          content: const Text("Are you sure?"),
-          actions: [
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))),
+          title: const Text("Register new account?", style: TextStyle()),
+          content: const Text("Are you sure?", style: TextStyle()),
+          actions: <Widget>[
+            // Button to confirm registration
             TextButton(
-              child: const Text("Yes"),
+              child: const Text("Yes", style: TextStyle()),
               onPressed: () {
                 Navigator.of(context).pop();
                 _registerUser();
               },
             ),
+            // Button to cancel registration
             TextButton(
-              child: const Text("No"),
+              child: const Text("No", style: TextStyle()),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -230,12 +236,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // Function to register user by sending data to the server
   void _registerUser() {
     String name = nameController.text;
     String email = emailController.text;
     String phoneNum = phoneNumController.text;
     String password = passwordController.text;
 
+    // HTTP POST request to register user
     http.post(
         Uri.parse("${MyConfig.servername}/mymemberlink/api/register_user.php"),
         body: {
@@ -246,14 +254,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }).then((response) {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        // Registration success
         if (data['status'] == "success") {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Registration Success"),
             backgroundColor: Colors.green,
           ));
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (content) => const LoginScreen()));
         } else {
+          // Registration failed
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Registration Failed"),
             backgroundColor: Colors.red,
